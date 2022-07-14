@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+import pandas as pd
+import sys
+
+def Logistic(x, K, N_o, r):
+    y = K / (1 + ((K-N_o)/N_o)*np.exp(-r*x))
+    return y
+
+def fit_and_report(func, x, y):
+    parameters, covariance = curve_fit(Logistic, x, y)
+    print(f'K={parameters[0]} +/- {covariance[0,0]*np.sqrt(len(x))}')
+    print(f'N_o={parameters[1]} +/- {covariance[1,1]*np.sqrt(len(x))}')
+    print(f'r={parameters[2]} +/- {covariance[2,2]*np.sqrt(len(x))}')
+    return parameters, covariance
+
+
+data = pd.read_csv(sys.argv[1], header=0, index_col='time ')
+
+concatetimes = np.concatenate([data.index.values,data.index.values,data.index.values])
+concatvalues = np.concatenate([data.A.values,data.B.values,data.C.values])
+
+
+
+print(concatvalues)
+
+
+x = np.linspace(np.min(concatetimes),np.max(concatetimes),1000)
+plt.scatter(concatetimes,concatvalues)
+parms, covar = fit_and_report(Logistic,concatetimes, concatvalues)
+plt.plot(x, Logistic(x,*parms))
+plt.xlabel('Time[hours]')
+plt.savefig('curve-fitting.jpg') 
+plt.show()
